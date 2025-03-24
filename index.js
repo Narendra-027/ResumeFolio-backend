@@ -1,51 +1,45 @@
 const express = require("express");
 const app = express();
-const path = require("path");
-const cors = require('cors');
-const dotenv = require('dotenv');
-dotenv.config();
+const cors = require("cors");
+const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-// const config = require("./config/key");
-
-
 const mongoose = require("mongoose");
-const connect = mongoose.connect(process.env.MONGO_CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB Connected...'))
-  .catch(err => console.log(err));
+
+dotenv.config();
+
+// Connect to MongoDB
+mongoose
+  .connect(process.env.MONGO_CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("MongoDB Connected..."))
+  .catch((err) => console.log(err));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-app.use('/api/users', require('./routes/users'));
-app.use('/api/resume', require('./routes/resume'));
-
-
+// CORS Middleware
 app.use(
   cors({
-    origin: ["https://vercel.com/narendra-janis-projects/resume-builder","http://localhost:3000"], // Frontend URL
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
-    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
-    credentials: true, // Enables sending cookies
+    origin: ["https://vercel.com/narendra-janis-projects/resume-builder", "http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 app.options("*", cors());
 
-// Serve static assets if in production
+// API Routes
+app.use("/api/users", require("./routes/users"));
+app.use("/api/resume", require("./routes/resume"));
+
+// Production Mode Logging
 if (process.env.NODE_ENV === "production") {
-
-  // Set static folder
-  app.use(express.static("build"));
-
-  // index.html for all page routes
-  app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "build", "index.html"));
-  });
+  console.log("Running in production mode. No static frontend is served.");
 }
 
-const port = process.env.PORT || 5000
-
+// Start Server
+const port = process.env.PORT || 5000;
 app.listen(port, () => {
-  console.log(`Server Running at ${port}`)
+  console.log(`Server Running at ${port}`);
 });
