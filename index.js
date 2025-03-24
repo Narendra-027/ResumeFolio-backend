@@ -9,13 +9,22 @@ const mongoose = require("mongoose");
 dotenv.config();
 
 // Connect to MongoDB
-mongoose
-  .connect(process.env.MONGO_CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("✅ MongoDB Connected..."))
-  .catch((err) => {
+async function connectDB() {
+  try {
+    console.log("🔄 Attempting MongoDB connection...");
+    await mongoose.connect(process.env.MONGO_CONNECTION, { 
+      useNewUrlParser: true, 
+      useUnifiedTopology: true 
+    });
+    console.log("✅ MongoDB Connected!");
+  } catch (err) {
     console.error("❌ MongoDB Connection Error:", err);
-    process.exit(1); // Exit the process if MongoDB fails to connect
-  });
+    process.exit(1); // Stop the app if MongoDB connection fails
+  }
+}
+
+connectDB();
+
 
 
 app.get("/", (req, res) => {
@@ -24,6 +33,13 @@ app.get("/", (req, res) => {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+
+// Middleware for handling API errors
+app.use((err, req, res, next) => {
+  console.error("🚨 Error:", err.stack);
+  res.status(500).json({ success: false, message: "Internal Server Error" });
+});
+
 
 // CORS Middleware
 app.use(
