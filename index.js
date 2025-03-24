@@ -12,16 +12,25 @@ dotenv.config();
 async function connectDB() {
   try {
     console.log("🔄 Attempting MongoDB connection...");
+    
+    if (!process.env.MONGO_CONNECTION) {
+      throw new Error("❌ MONGO_CONNECTION is undefined! Check your environment variables.");
+    }
+
     await mongoose.connect(process.env.MONGO_CONNECTION, { 
       useNewUrlParser: true, 
       useUnifiedTopology: true 
     });
+
     console.log("✅ MongoDB Connected!");
   } catch (err) {
     console.error("❌ MongoDB Connection Error:", err);
-    process.exit(1); // Stop the app if MongoDB connection fails
+    process.exit(1); // Stop server if MongoDB fails
   }
 }
+
+connectDB();
+
 
 connectDB();
 
