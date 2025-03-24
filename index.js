@@ -12,7 +12,7 @@ dotenv.config();
 async function connectDB() {
   try {
     console.log("🔄 Attempting MongoDB connection...");
-    
+    console.log("mongoUri'", process.env.MONGO_CONNECTION);
     if (!process.env.MONGO_CONNECTION) {
       throw new Error("❌ MONGO_CONNECTION is undefined! Check your environment variables.");
     }
