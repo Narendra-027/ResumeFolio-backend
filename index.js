@@ -11,9 +11,16 @@ dotenv.config();
 // Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("MongoDB Connected..."))
-  .catch((err) => console.log(err));
+  .then(() => console.log("✅ MongoDB Connected..."))
+  .catch((err) => {
+    console.error("❌ MongoDB Connection Error:", err);
+    process.exit(1); // Exit the process if MongoDB fails to connect
+  });
 
+
+app.get("/", (req, res) => {
+  res.json({ message: "Backend is running!" });
+});
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
