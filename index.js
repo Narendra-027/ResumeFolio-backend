@@ -53,7 +53,7 @@ app.use((err, req, res, next) => {
 // CORS Middleware
 app.use(
   cors({
-    origin: ["https://vercel.com/narendra-janis-projects/resume-builder", "http://localhost:3000"],
+    origin: ["https://resume-folio-frontend.vercel.app/login", "http://localhost:3000"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
