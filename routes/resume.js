@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Resume } = require("../models/Resume");
 const { User } = require("../models/User");
-
+const puppeteer = require("puppeteer");
 //const { auth } = require("../middleware/auth");
 
 
@@ -41,6 +41,26 @@ router.post("/uploadResume",(req, res) =>{
             return res.status(200).json({success : true, id: resume_._id});
         }
     })
+});
+
+router.post("/deleteResume", (req, res) => {
+    const resumeId = req.body.resumeId;
+    const userId = req.body.userId;
+
+    Resume.findOneAndDelete({ _id: resumeId }, (err, doc) => {
+        if (err) return res.json({ success: false, err });
+        User.findOneAndUpdate(
+            { _id: userId },
+            { $pull: { resumes: { id: resumeId } } },
+            { new: true },
+            (err, userInfo) => {
+                if (err) return res.json({ success: false, err });
+                return res.status(200).send({
+                    success: true,
+                });
+            }
+        );
+    });
 });
 
 router.get("/resume_by_id", (req, res) => {
@@ -110,60 +130,32 @@ router.post("/updateResume", (req, res)=>{
     )
 })
 
-
-router.post("/getProducts", (req, res) => {
-
-    let order = req.body.order ? req.body.order : "desc";
-    let sortBy = req.body.sortBy ? req.body.sortBy : "_id";
-    let limit = req.body.limit ? parseInt(req.body.limit) : 100;
-    let skip = parseInt(req.body.skip);
-
-    let findArgs = {};
-    let term = req.body.searchTerm;
-
-    for (let key in req.body.filters) {
-
-        if (req.body.filters[key].length > 0) {
-            if (key === "price") {
-                findArgs[key] = {
-                    $gte: req.body.filters[key][0],
-                    $lte: req.body.filters[key][1]
-                }
-            } else {
-                findArgs[key] = req.body.filters[key];
-            }
-        }
+router.get("/generate-pdf", async (req, res) => {
+    try {
+      const browser = await puppeteer.launch();
+      const page = await browser.newPage();
+  
+      // Load the resume page (Frontend route where resume is displayed)
+      await page.goto("http://localhost:3000/body", { waitUntil: "networkidle2" });
+  
+      // Wait for resume div to load
+      await page.waitForSelector("#resume", {visible: true});
+  
+      // Generate the PDF
+      const pdfBuffer = await page.pdf({
+        format: "A4",
+        printBackground: true, // Ensure styles and backgrounds are included
+      });
+  
+      await browser.close();
+  
+      // Send the PDF as a response
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "attachment; filename=resume.pdf");
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      res.status(500).send("Error generating PDF");
     }
-
-    console.log("findArgs",findArgs)
-
-    if (term) {
-    const regex = new RegExp(term, "i"); // "i" flag makes the search case-insensitive
-
-    // Use the regular expression in the query to match partial text
-        findArgs = { ...findArgs, products: regex };
-        Product.find(findArgs)
-            .find({ $text: { $search: term } })
-            .populate("writer")
-            .sort([[sortBy, order]])
-            .skip(skip)
-            .limit(limit)
-            .exec((err, products) => {
-                if (err) return res.status(400).json({ success: false, err })
-                res.status(200).json({ success: true, products, postSize: products.length })
-            })
-    } else {
-        Product.find(findArgs)
-            .populate("writer")
-            .sort([[sortBy, order]])
-            .skip(skip)
-            .limit(limit)
-            .exec((err, products) => {
-                if (err) return res.status(400).json({ success: false, err })
-                res.status(200).json({ success: true, products, postSize: products.length })
-            })
-    }
-});
-
-
+  });
 module.exports = router;
