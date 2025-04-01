@@ -119,7 +119,7 @@ router.post("/updateResume", (req, res)=>{
             if(err) return res.json({ success: false, err });
             User.findOneAndUpdate(
                 { _id: req.body.userId, "resumes.id": req.body.resumeId },
-                { $set: {"resumes.$.title": req.body.title}},
+                { $set: {"resumes.$.title": req.body.title, "resumes.$.date": Date.now()} },
                 { new: true},
                 (err, response)=>{
                     if(err) return res.json({ success: false, err });
